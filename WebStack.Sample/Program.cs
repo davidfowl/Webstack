@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Owin.Hosting;
+using Owin;
 
 namespace WebStack.Sample
 {
@@ -11,21 +8,27 @@ namespace WebStack.Sample
     {
         static void Main(string[] args)
         {
-            var http_server = WebServer.create_server(new Call(Invoke));
-
-            Task.Run(() =>
+            var options = new StartOptions
             {
-                WebServer.start_server(http_server);
-            });
+                ServerFactory = "WebStack"
+            };
 
-            Console.ReadKey();
-
-            WebServer.stop_server(http_server);
+            using (WebApp.Start<Startup>(options))
+            {
+                Console.WriteLine("Running a fake http server");
+                Console.ReadKey();
+            }
         }
+    }
 
-        private static void Invoke(IntPtr envrionment)
+    public class Startup
+    {
+        public void Configuration(IAppBuilder app)
         {
-            var request = Marshal.PtrToStructure(envrionment, typeof(owin_request));
+            app.Use(async context =>
+            {
+                await context.Response.WriteAsync("Hello World");
+            });
         }
     }
 }
