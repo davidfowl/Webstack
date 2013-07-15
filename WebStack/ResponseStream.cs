@@ -33,7 +33,7 @@ namespace WebStack
 
         public override void Flush()
         {
-            
+
         }
 
         public override long Length
@@ -72,7 +72,7 @@ namespace WebStack
         {
             fixed (byte* bytes = &buffer[offset])
             {
-                WebServer.response_write(_httpContextPtr, bytes, count);   
+                WebServer.write_response_body(_httpContextPtr, bytes, count);
             }
         }
 

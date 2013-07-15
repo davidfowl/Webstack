@@ -123,7 +123,7 @@ namespace WebStack
                     value = _requestHeaders;
                     return true;
                 case OwinConstants.RequestBody:
-                    value = _requestBody ?? new RequestStream(_httpContext);
+                    value = _requestBody ?? new RequestStream(_httpContextPtr);
                     return true;
                 case OwinConstants.ResponseHeaders:
                     value = _responseHeaders;

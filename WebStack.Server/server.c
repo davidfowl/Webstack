@@ -3,8 +3,6 @@
 #define STRLENOF(s) sizeof(s)-1
 #define ASSIGN(s, val, length) s.value = (char*)malloc(length+1); s.length = length; strncpy(s.value, val, length); s.value[length]= '\0';
 #define SETSTRING(s,val) s.value=val; s.length=STRLENOF(val)
-#define APPENDSTRING(s,val) memcpy((char*)s->value + s->length, val, STRLENOF(val)); s->length+=STRLENOF(val)
-#define FREESTRING(s) free(s.value)
 
 typedef struct
 {
@@ -50,14 +48,23 @@ typedef struct
 
 } http_server;
 
-extern __declspec(dllexport) void __stdcall response_write(http_context* context, char* buffer, int length)
+extern __declspec(dllexport) int __stdcall read_request_body(http_context* context, char* buffer, int length)
 {
-    
+    // Number of bytes read
+    return 0;
+}
+
+extern __declspec(dllexport) int __stdcall write_response_body(http_context* context, char* buffer, int length)
+{
+    // 0 - The data was buffered for writing but is currently waiting for drain
+    // 1 - Write was successfully flushed to the underlying network
+    return 1;
 }
 
 extern __declspec(dllexport) void __stdcall on_response_drain(stream_drain_callback* drain_callback)
 {
-
+    // the drain callback is fired when 0 is returned from write and that stream successfully
+    // unblocks
 }
 
 extern __declspec(dllexport) http_server* __stdcall create_server(http_callback callback, void* callback_state)
@@ -70,7 +77,7 @@ extern __declspec(dllexport) http_server* __stdcall create_server(http_callback 
     return server;
 }
 
-extern __declspec(dllexport) int __stdcall start_server(http_server* server)
+extern __declspec(dllexport) int __stdcall start_server(http_server* server, const char* address, short port)
 {
     while(server->callback != NULL) 
     {
@@ -84,7 +91,7 @@ extern __declspec(dllexport) int __stdcall start_server(http_server* server)
 
         server->callback(context, server->callback_state);
 
-        _sleep(5);
+        _sleep(5000);
     }
 
     return 0;   

@@ -52,13 +52,16 @@ namespace WebStack
         public static extern IntPtr create_server(http_request_callback callback, IntPtr callback_state);
 
         [DllImport("WebStack.Server.dll")]
-        public static extern void start_server(IntPtr http_server);
+        public static extern void start_server(IntPtr http_server, string address, short port);
 
         [DllImport("WebStack.Server.dll")]
         public static extern void stop_server(IntPtr http_server);
 
         [DllImport("WebStack.Server.dll")]
-        public unsafe static extern void response_write(IntPtr http_context, byte* buffer, int length);
+        public unsafe static extern int read_request_body(IntPtr http_context, byte* buffer, int length);
+
+        [DllImport("WebStack.Server.dll")]
+        public unsafe static extern int write_response_body(IntPtr http_context, byte* buffer, int length);
 
         [DllImport("WebStack.Server.dll")]
         public unsafe static extern void on_response_drain(stream_drain_callback drain_callback);

@@ -1,33 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace WebStack
 {
-    class RequestStream : Stream
+    public class RequestStream : Stream
     {
-        private readonly http_context _httpContext;
+        private readonly IntPtr _httpContextPtr;
 
-        public RequestStream(http_context httpContext)
+        public RequestStream(IntPtr httpContextPtr)
         {
-            _httpContext = httpContext;
+            _httpContextPtr = httpContextPtr;
         }
 
         public override bool CanRead
         {
-            get { throw new NotImplementedException(); }
+            get { return true; }
         }
 
         public override bool CanSeek
         {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public override bool CanWrite
         {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public override void Flush()
@@ -52,9 +49,12 @@ namespace WebStack
             }
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public unsafe override int Read(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            fixed (byte* bytes = &buffer[offset])
+            {
+                return WebServer.read_request_body(_httpContextPtr, bytes, count);
+            }
         }
 
         public override long Seek(long offset, SeekOrigin origin)
