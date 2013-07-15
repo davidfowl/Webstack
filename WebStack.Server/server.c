@@ -61,10 +61,11 @@ extern __declspec(dllexport) int __stdcall write_response_body(http_context* con
     return 1;
 }
 
-extern __declspec(dllexport) void __stdcall on_response_drain(stream_drain_callback* drain_callback)
+extern __declspec(dllexport) void __stdcall on_response_drain(stream_drain_callback drain_callback)
 {
     // the drain callback is fired when 0 is returned from write and that stream successfully
     // unblocks
+    
 }
 
 extern __declspec(dllexport) http_server* __stdcall create_server(http_callback callback, void* callback_state)
