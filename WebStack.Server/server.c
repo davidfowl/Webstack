@@ -11,40 +11,56 @@ typedef struct
     char* value;
     int length;
 
-} string;
+} http_string;
 
 typedef struct
 {
-    string name;
-    string value;
+    http_string name;
+    http_string value;
 
-} header;
+} http_header;
 
+typedef struct
+{
+    int header_count;
+    http_header** headers;
+
+} http_headers;
 
 typedef struct 
 {
-    string path;
-    string path_base;
-    string request_method;
-    string request_query_string;
-    string request_scheme;
+    http_string request_path;
+    http_string request_path_base;
+    http_string request_method;
+    http_string request_protocol;
+    http_string request_query_string;
+    http_string request_scheme;
 
-    int header_count;
-    header** headers;
+    http_headers request_headers;
 
-} owin_request;
+} http_context;
 
-typedef void (__stdcall *callback)(owin_request*, void*);
+typedef void (__stdcall *http_callback)(http_context*, void*);
+typedef void (__stdcall *stream_drain_callback)(http_context*);
 
 typedef struct
 {
-    callback callback;
+    http_callback callback;
     void* callback_state;
 
 } http_server;
 
+extern __declspec(dllexport) void __stdcall response_write(http_context* context, char* buffer, int length)
+{
+    
+}
 
-extern __declspec(dllexport) http_server* __stdcall create_server(callback callback, void* callback_state)
+extern __declspec(dllexport) void __stdcall on_response_drain(stream_drain_callback* drain_callback)
+{
+
+}
+
+extern __declspec(dllexport) http_server* __stdcall create_server(http_callback callback, void* callback_state)
 {
     http_server* server = (http_server*)malloc(sizeof(http_server));
 
@@ -58,14 +74,15 @@ extern __declspec(dllexport) int __stdcall start_server(http_server* server)
 {
     while(server->callback != NULL) 
     {
-        owin_request* request  = (owin_request*)malloc(sizeof(owin_request));
-        SETSTRING(request->path, "/");
-        SETSTRING(request->path_base, "");
-        SETSTRING(request->request_method, "GET");
-        SETSTRING(request->request_query_string, "");
-        SETSTRING(request->request_scheme, "http");
+        http_context* context  = (http_context*)malloc(sizeof(http_context));
+        SETSTRING(context->request_path, "/");
+        SETSTRING(context->request_path_base, "");
+        SETSTRING(context->request_method, "GET");
+        SETSTRING(context->request_protocol, "HTTP/1.1");
+        SETSTRING(context->request_query_string, "");
+        SETSTRING(context->request_scheme, "http");
 
-        server->callback(request, server->callback_state);
+        server->callback(context, server->callback_state);
 
         _sleep(5);
     }
