@@ -9,34 +9,45 @@ namespace WebStack
 
     public class OwinWebStackServer : IDisposable
     {
-        private readonly AppFunc _app;
-        private readonly http_request_callback _callback;
         private readonly IntPtr _httpServer;
-        private readonly string _host;
-        private readonly short _port;
+        private readonly AppFunc _appFunc;
+        private readonly GCHandle _callbackHandle;
+
+        private string _host;
+        private short _port;
 
         private delegate Task OwinAppDelegate(IDictionary<string, object> environment);
 
-        public OwinWebStackServer(AppFunc app, IDictionary<string, object> properties)
+        public OwinWebStackServer(AppFunc appFunc, IDictionary<string, object> properties)
         {
-            _app = app;
-            _callback = new http_request_callback(OnHttpRequest);
-            var address = ((IList<IDictionary<string, object>>)properties["host.Addresses"])[0];
+            _appFunc = appFunc;
+            
+            // Setup the host and port
+            InitalizeHostAndPort(properties);
 
-            // We only support http for now
-            // string scheme = address.Get<string>("scheme") ?? Uri.UriSchemeHttp;
-            _host = address.Get<string>("host") ?? "localhost";
-            string port = address.Get<string>("port") ?? "5000";
-            _port = short.Parse(port);
-
+            // Wrap the generic delegate with a typed delegate to appease the CLR
             OwinAppDelegate appFuncWrapper = env =>
             {
-                return _app(env);
+                return appFunc(env);
             };
 
-            IntPtr appFuncThunk = Marshal.GetFunctionPointerForDelegate(appFuncWrapper);
+            // Allocate the callback for the server to call
+            var callback = new http_request_callback(OnHttpRequest);
 
-            _httpServer = WebServer.create_server(_callback, appFuncThunk);
+            // Create a GCHandle for the callback so it doesn't get GCed
+            _callbackHandle = GCHandle.Alloc(callback);
+
+            // Create the webserver
+            _httpServer = WebServer.create_server(callback, IntPtr.Zero);
+        }
+
+        private void InitalizeHostAndPort(IDictionary<string, object> properties)
+        {
+            var addresses = properties.Get<IList<IDictionary<string, object>>>("host.Addresses");
+            var address = addresses[0];
+
+            _host = address.Get<string>("host") ?? "localhost";
+            _port = short.Parse(address.Get<string>("port") ?? "5000");
         }
 
         public void Start()
@@ -48,24 +59,20 @@ namespace WebStack
             });
         }
 
-        private static void OnHttpRequest(IntPtr http_context, IntPtr callback_state)
+        private void OnHttpRequest(IntPtr http_context, IntPtr callback_state)
         {
-            // REVIEW: If this is too slow then we can consider a static dictionary
-            // mapping the http_server to the app func
-            var appFunc = (OwinAppDelegate)Marshal.GetDelegateForFunctionPointer(callback_state, typeof(OwinAppDelegate));
-
             var env = new OwinEnvironment(http_context);
 
-            appFunc.Invoke(env)
-                   .ContinueWith(task =>
-                   {
-                       // TODO: Make this async
-                   });
+            _appFunc.Invoke(env)
+                .ContinueWith(task =>
+                {
+                    // TODO: Make this callback async
+                });
         }
 
         public void Dispose()
         {
-
+            _callbackHandle.Free();
         }
     }
 }

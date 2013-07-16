@@ -82,17 +82,27 @@ extern __declspec(dllexport) int __stdcall start_server(http_server* server, con
 {
     while(server->callback != NULL) 
     {
+        http_header* header;
         http_context* context  = (http_context*)malloc(sizeof(http_context));
+
         SETSTRING(context->request_path, "/");
         SETSTRING(context->request_path_base, "");
         SETSTRING(context->request_method, "GET");
         SETSTRING(context->request_protocol, "HTTP/1.1");
         SETSTRING(context->request_query_string, "");
         SETSTRING(context->request_scheme, "http");
+        
+        context->request_headers.header_count = 1;
+        context->request_headers.headers = (http_header**)calloc(10, sizeof(http_header));
+        context->request_headers.headers[0] = (http_header*)malloc(sizeof(http_header));
+        header = context->request_headers.headers[0];
+
+        SETSTRING(header->name, "Host");
+        SETSTRING(header->value, "http://localhost");
 
         server->callback(context, server->callback_state);
 
-        _sleep(5000);
+        _sleep(1000);
     }
 
     return 0;   

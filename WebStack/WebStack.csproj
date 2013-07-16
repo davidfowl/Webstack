@@ -46,6 +46,7 @@
     <Compile Include="OwinEnvironment.cs" />
     <Compile Include="OwinServerFactory.cs" />
     <Compile Include="OwinWebStackServer.cs" />
+    <Compile Include="RequestHeaders.cs" />
     <Compile Include="RequestStream.cs" />
     <Compile Include="ResponseStream.cs" />
     <Compile Include="WebServer.cs" />

@@ -36,12 +36,14 @@ namespace WebStack
 
         [MarshalAs(UnmanagedType.Struct)]
         public http_string request_scheme;
+
+        public IntPtr request_headers;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct http_string
     {
-        public string value;
+        public IntPtr value;
 
         public int length;
     }
@@ -65,5 +67,14 @@ namespace WebStack
 
         [DllImport("WebStack.Server.dll")]
         public unsafe static extern void on_response_drain(stream_drain_callback drain_callback);
+    }
+
+
+    public static class WebServerExtensions
+    {
+        public static string GetString(this http_string @string)
+        {
+            return Marshal.PtrToStringAnsi(@string.value, @string.length);
+        }
     }
 }

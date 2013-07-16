@@ -99,28 +99,28 @@ namespace WebStack
             switch (key)
             {
                 case OwinConstants.RequestProtocol:
-                    value = _requestProtocol ?? _httpContext.request_protocol.value;
+                    value = _requestProtocol ?? _httpContext.request_protocol.GetString();
                     return true;
                 case OwinConstants.CallCancelled:
                     value = _callCancelled;
                     return true;
                 case OwinConstants.RequestMethod:
-                    value = _requestMethod ?? _httpContext.request_method.value;
+                    value = _requestMethod ?? _httpContext.request_method.GetString();
                     return true;
                 case OwinConstants.RequestPathBase:
-                    value = _requestPathBase ?? _httpContext.request_path_base.value;
+                    value = _requestPathBase ?? _httpContext.request_path_base.GetString();
                     return true;
                 case OwinConstants.RequestPath:
-                    value = _requestPath ?? _httpContext.request_path.value;
+                    value = _requestPath ?? _httpContext.request_path.GetString();
                     return true;
                 case OwinConstants.RequestQueryString:
-                    value = _requestQueryString ?? _httpContext.request_query_string.value;
+                    value = _requestQueryString ?? _httpContext.request_query_string.GetString();
                     return true;
                 case OwinConstants.RequestScheme:
-                    value = _requestScheme ?? _httpContext.request_scheme.value;
+                    value = _requestScheme ?? _httpContext.request_scheme.GetString();
                     return true;
                 case OwinConstants.RequestHeaders:
-                    value = _requestHeaders;
+                    value = _requestHeaders ?? new RequestHeaders(_httpContext.request_headers);
                     return true;
                 case OwinConstants.RequestBody:
                     value = _requestBody ?? new RequestStream(_httpContextPtr);
