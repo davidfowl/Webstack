@@ -1,8 +1,53 @@
 #include <stdlib.h>
+#include <string.h>
 
 #define STRLENOF(s) sizeof(s)-1
 #define ASSIGN(s, val, length) s.value = (char*)malloc(length+1); s.length = length; strncpy(s.value, val, length); s.value[length]= '\0';
 #define SETSTRING(s,val) s.value=val; s.length=STRLENOF(val)
+
+static char* known_request_headers[] = {
+    "cache-control",
+    "connection",
+    "date",
+    "keep-alive",
+    "pragma",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "via",
+    "warning",
+    "alive",
+    "content-length",
+    "content-type",
+    "content-encoding",
+    "content-language",
+    "content-location",
+    "content-md5",
+    "content-range",
+    "expires",
+    "last-modified",
+    "accept",
+    "accept-charset",
+    "accept-encoding",
+    "accept-language",
+    "authorization",
+    "cookie",
+    "expect",
+    "from",
+    "host",
+    "if-match",
+    "if-modified-since",
+    "if-none-match",
+    "if-range",
+    "if-unmodified-since",
+    "max-forwards",
+    "proxy-authorization",
+    "referer",
+    "range",
+    "te",
+    "translate",
+    "user-agent"
+};
 
 typedef struct
 {
@@ -21,7 +66,7 @@ typedef struct
 typedef struct
 {
     int header_count;
-    http_header** headers;
+    http_header* headers[30];
 
 } http_headers;
 
@@ -80,10 +125,13 @@ extern __declspec(dllexport) http_server* __stdcall create_server(http_callback 
 
 extern __declspec(dllexport) int __stdcall start_server(http_server* server, const char* address, short port)
 {
+    http_header* header;
+    http_context* context;
+
     while(server->callback != NULL) 
     {
-        http_header* header;
-        http_context* context  = (http_context*)malloc(sizeof(http_context));
+        context = (http_context*)malloc(sizeof(http_context));
+        memset(context->request_headers.headers, 0, sizeof(context->request_headers.headers));
 
         SETSTRING(context->request_path, "/");
         SETSTRING(context->request_path_base, "");
@@ -91,9 +139,8 @@ extern __declspec(dllexport) int __stdcall start_server(http_server* server, con
         SETSTRING(context->request_protocol, "HTTP/1.1");
         SETSTRING(context->request_query_string, "");
         SETSTRING(context->request_scheme, "http");
-        
+
         context->request_headers.header_count = 1;
-        context->request_headers.headers = (http_header**)calloc(10, sizeof(http_header));
         context->request_headers.headers[0] = (http_header*)malloc(sizeof(http_header));
         header = context->request_headers.headers[0];
 

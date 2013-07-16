@@ -28,7 +28,7 @@ namespace WebStack.Sample
             app.Use(async context =>
             {
                 Console.WriteLine(context.Request.Path);
-                // Console.WriteLine(context.Request.Headers["Host"]);
+                Console.WriteLine(context.Request.Headers["Host"]);
                 await context.Response.WriteAsync("Hello World");
             });
         }

@@ -21,7 +21,7 @@ namespace WebStack
         public OwinWebStackServer(AppFunc appFunc, IDictionary<string, object> properties)
         {
             _appFunc = appFunc;
-            
+
             // Setup the host and port
             InitalizeHostAndPort(properties);
 

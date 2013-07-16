@@ -17,6 +17,15 @@ namespace WebStack
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct http_headers
+    {
+        public int header_count;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30)]
+        public IntPtr[] headers;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct http_context
     {
         [MarshalAs(UnmanagedType.Struct)]
@@ -37,7 +46,8 @@ namespace WebStack
         [MarshalAs(UnmanagedType.Struct)]
         public http_string request_scheme;
 
-        public IntPtr request_headers;
+        [MarshalAs(UnmanagedType.Struct)]
+        public http_headers request_headers;
     }
 
     [StructLayout(LayoutKind.Sequential)]

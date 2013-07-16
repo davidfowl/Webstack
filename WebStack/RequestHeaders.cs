@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace WebStack
 {
     public class RequestHeaders : IDictionary<string, string[]>
     {
-        private readonly IntPtr _headersPtr;
+        private readonly http_headers _headers;
+        private static Dictionary<string, int> _headerLookup = GetHeaders();
 
-        public RequestHeaders(IntPtr headersPtr)
+        public RequestHeaders(http_headers headers)
         {
-            _headersPtr = headersPtr;
+            _headers = headers;
         }
 
         public void Add(string key, string[] value)
@@ -38,9 +37,20 @@ namespace WebStack
 
         public bool TryGetValue(string key, out string[] value)
         {
-            var header = (http_header)Marshal.PtrToStructure(_headersPtr, typeof(http_header));
-            value = new[] { header.value.GetString() };
-            return true;
+            int index;
+            if (_headerLookup.TryGetValue(key, out index))
+            {
+                IntPtr headerPtr = _headers.headers[index];
+                if (headerPtr != IntPtr.Zero)
+                {
+                    var header = (http_header)Marshal.PtrToStructure(headerPtr, typeof(http_header));
+                    value = new[] { header.value.GetString() };
+                    return true;
+                }
+            }
+
+            value = null;
+            return false;
         }
 
         public ICollection<string[]> Values
@@ -100,9 +110,65 @@ namespace WebStack
             throw new NotImplementedException();
         }
 
-        IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return GetEnumerator();
+        }
+
+
+        private static Dictionary<string, int> GetHeaders()
+        {
+            var knownRequestHeaders = new[] {
+                "cache-control",
+                "connection",
+                "date",
+                "keep-alive",
+                "pragma",
+                "trailer",
+                "transfer-encoding",
+                "upgrade",
+                "via",
+                "warning",
+                "alive",
+                "content-length",
+                "content-type",
+                "content-encoding",
+                "content-language",
+                "content-location",
+                "content-md5",
+                "content-range",
+                "expires",
+                "last-modified",
+                "accept",
+                "accept-charset",
+                "accept-encoding",
+                "accept-language",
+                "authorization",
+                "cookie",
+                "expect",
+                "from",
+                "host",
+                "if-match",
+                "if-modified-since",
+                "if-none-match",
+                "if-range",
+                "if-unmodified-since",
+                "max-forwards",
+                "proxy-authorization",
+                "referer",
+                "range",
+                "te",
+                "translate",
+                "user-agent"
+            };
+
+            var lookup = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < knownRequestHeaders.Length; i++)
+            {
+                lookup[knownRequestHeaders[i]] = i;
+            }
+
+            return lookup;
         }
     }
 }
